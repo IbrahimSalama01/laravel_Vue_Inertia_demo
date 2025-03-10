@@ -28,10 +28,10 @@
 
                             @foreach ($posts as $post)
                                 <tr>
-                                    <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">{{ $post['id'] }}</td>
-                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{$post['title']}}</td>
-                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{ $post['posted_By'] }}</td>
-                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{ $post['created_at'] }}</td>
+                                    <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">{{ $post->id }}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{$post->title }}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{ $post->user->name }}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-700">{{ $post->created_at->toformattedDateString() }}</td>
                                     <td class="px-4 py-2 whitespace-nowrap text-gray-700 space-x-2">
                                         <a href="{{ route('posts.show', $post->id) }}"
                                             class="inline-block px-4 py-1 text-xs font-medium text-white bg-blue-400 rounded hover:bg-blue-500">View</a>
@@ -48,8 +48,7 @@
                                             Delete</button>
                                         </form>
 
-                                        <vue-component  postid="@php echo($post->id) @endphp" class="inline-block"  />
-                                            {{-- <x-button :type="'rose-400'">Test x-button</x-button> --}}
+                                        <vue-component  postid="@php echo($post->id) @endphp" class="inline-block"/>
                                     </td>
                                 </tr>
                             @endforeach
