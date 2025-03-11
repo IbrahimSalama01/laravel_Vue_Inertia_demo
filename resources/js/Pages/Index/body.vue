@@ -1,13 +1,69 @@
 <script setup >
-import { defineProps } from 'vue';
+import { defineProps, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { usePoll } from '@inertiajs/vue3'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 
-const props = defineProps(["posts"]);
+const selectedPost = ref({});
+const selectedUser = ref({});
+
+
+
+const props = defineProps(["posts","users"]);
+console.log(props)
 const fetchPage = (url) =>{
     if (url) {
         router.get(url); // Navigate to the clicked page
     }
 }
+const createclicked = ()=>{
+    selectedPost.value = {};
+}
+const createConfirmed = ()=>{
+    let post =selectedPost.value;
+    post.user_id = selectedUser.value;
+        router.post(`/posts`,post,{
+        preserveScroll: true, // Prevents scrolling back to top
+        onSuccess: () => {
+            selectedPost.value = {}; // Clear selected post after delete
+        }
+    });
+}
+const viewClicked = (post)=>{
+    selectedPost.value = post;
+    selectedUser.value = post.user_id
+}
+
+const deleteConfirmed = (post)=>{
+    router.delete(`/post/${post.id}`,{
+        preserveScroll: true, // Prevents scrolling back to top
+        onSuccess: () => {
+            selectedPost.value = {}; // Clear selected post after delete
+        }
+    });
+}
+    const updateConfirmed = (post)=>{
+        post.user_id = selectedUser.value
+        router.put(`/post/${post.id}`,post,{
+        preserveScroll: true, // Prevents scrolling back to top
+        onSuccess: () => {
+            selectedPost.value = {}; // Clear selected post after delete
+        }
+    });
+}
+
+
 
 const formatTime = (date) => {
     return new Intl.DateTimeFormat("en-US", {
@@ -20,9 +76,52 @@ const formatTime = (date) => {
 </script>
 <template lang="">
     <div class = "w-10/12 px-4 h-11/12">
+
         <div class="flex flex-col gap-3 py-4">
             <div class="flex justify-center items-ceneter">
-                <button class="px-4 py-3 bg-green-500 rounded-md hover:bg-green-700"> Create Post</button>
+                <AlertDialog>
+                    <AlertDialogTrigger @click="createclicked" class="px-4 py-3 bg-green-500 rounded-md hover:bg-green-700"> Create Post</AlertDialogTrigger>
+                    <!-- <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-700"> update</AlertDialogTrigger> -->
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                <div>
+                                    <!-- Title Input -->
+                                    <div class="mb-4">
+                                        <label for="title" class="block mb-1 text-sm font-medium text-gray-700">Title</label>
+                                        <input name="title" type="text" id="title"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            v-model="selectedPost.title">
+                                    </div>
+
+                                    <!-- Description Textarea -->
+                                    <div class="mb-4">
+                                        <label for="description"
+                                            class="block mb-1 text-sm font-medium text-gray-700">Description</label>
+                                        <textarea name="description" id="description" rows="5" v-model="selectedPost.description"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" ></textarea>
+                                    </div>
+
+                                    <!-- Post Creator Select -->
+                                    <div class="mb-6">
+                                        <label for="creator" class="block mb-1 text-sm font-medium text-gray-700">Post Creator</label>
+                                        <select name="post_creator" id="creator" v-model="selectedUser"
+                                            class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                            <option  v-for="user in props.users" :key="user.id" :value="user.id"  >
+
+                                                {{user.name}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </AlertDialogTitle>
+                        </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="createConfirmed">Create</AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
             <div class="flex flex-grow">
                 <table class="min-w-full text-center divide-gray-700 ">
@@ -42,9 +141,86 @@ const formatTime = (date) => {
                             <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{post.user.name}}</td>
                             <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{formatTime(post.created_at)}}</td>
                             <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >
-                                <button class="px-3 py-1 mx-2 text-sm text-white bg-blue-400 rounded-md hover:bg-blue-500"> view</button>
-                                <button class="px-3 py-1 mx-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-700"> update</button>
-                                <button class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800"> remove</button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-400 rounded-md hover:bg-blue-500"> view</AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>
+                                                <h3>Post: {{selectedPost.id}}</h3>
+                                                <h3>Title:  {{selectedPost.title}}</h3>
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            <div>
+                                                <p>{{selectedPost.description}}</p>
+                                                <div class="py-4 mt-4 border-t-2 border-gray-400">
+                                                <p class="text-lg font-bold " >Posted by: {{selectedPost.user.name}}</p>
+                                                <p>Create at: {{formatTime(selectedPost.created_at)}}</p>
+                                                </div>
+                                            </div>
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <!-- <AlertDialogCancel>Cancel</AlertDialogCancel> -->
+                                        <AlertDialogAction>OK</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <AlertDialog>
+                                <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-700"> update</AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            <div>
+                                                <!-- Title Input -->
+                                                <div class="mb-4">
+                                                    <label for="title" class="block mb-1 text-sm font-medium text-gray-700">Title</label>
+                                                    <input name="title" type="text" id="title"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                        v-model="selectedPost.title">
+                                                </div>
+
+                                                <!-- Description Textarea -->
+                                                <div class="mb-4">
+                                                    <label for="description"
+                                                        class="block mb-1 text-sm font-medium text-gray-700">Description</label>
+                                                    <textarea name="description" id="description" rows="5" v-model="selectedPost.description"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" ></textarea>
+                                                </div>
+
+                                                <!-- Post Creator Select -->
+                                                <div class="mb-6">
+                                                    <label for="creator" class="block mb-1 text-sm font-medium text-gray-700">Post Creator</label>
+                                                    <select name="post_creator" id="creator" v-model="selectedUser"
+                                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                                        <option  v-for="user in props.users" :key="user.id" :value="user.id"  >
+
+                                                            {{user.name}}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </AlertDialogTitle>
+                                    </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction @click="updateConfirmed(selectedPost)">Update</AlertDialogAction>
+                                </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <AlertDialog>
+                                <AlertDialogTrigger @click="viewClicked(selectedPost)" class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800"> remove</AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            Are you Sure you want delete {{selectedPost.id}} ?
+                                    </AlertDialogTitle>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction  @click="deleteConfirmed(post)">confirm</AlertDialogAction>
+                                </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                             </td>
                         </tr>
                     </tbody>
@@ -66,6 +242,7 @@ const formatTime = (date) => {
                     </button>
             </div>
         </div>
+
     </div>
 </template>
 
