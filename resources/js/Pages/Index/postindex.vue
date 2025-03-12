@@ -3,7 +3,7 @@ import navbar from './navbar.vue';
 import postbody from './body.vue';
 import { defineProps } from 'vue';
 const props = defineProps(["posts","users"]);
-console.log(props);
+//console.log(props);
 const asd ="asd"
 </script>
 <template lang="">

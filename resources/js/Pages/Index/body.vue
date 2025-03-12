@@ -1,64 +1,63 @@
 <script setup >
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, reactive, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { usePoll } from '@inertiajs/vue3'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 
-const selectedPost = ref({});
-const selectedUser = ref({});
-
+let selectedPost = reactive({});
+let selectedUser = computed({
+    get: () => selectedPost.user_id,
+    set: (value) => selectedPost.user_id = value,
+});
 
 
 const props = defineProps(["posts","users"]);
-console.log(props)
+//console.log(props)
 const fetchPage = (url) =>{
     if (url) {
-        router.get(url); // Navigate to the clicked page
+        router.get(url);
     }
 }
 const createclicked = ()=>{
-    selectedPost.value = {};
+    selectedPost= {};
 }
 const createConfirmed = ()=>{
-    let post =selectedPost.value;
-    post.user_id = selectedUser.value;
-        router.post(`/posts`,post,{
-        preserveScroll: true, // Prevents scrolling back to top
+        router.post(`/posts`,selectedPost,{
+        preserveState: true,
         onSuccess: () => {
-            selectedPost.value = {}; // Clear selected post after delete
+            selectedPost= {};
         }
     });
 }
 const viewClicked = (post)=>{
-    selectedPost.value = post;
-    selectedUser.value = post.user_id
+    Object.assign(selectedPost, post);
+    selectedUser = post.user_id
 }
 
-const deleteConfirmed = (post)=>{
-    router.delete(`/post/${post.id}`,{
-        preserveScroll: true, // Prevents scrolling back to top
+const deleteConfirmed = ()=>{
+    router.delete(`/post/${selectedPost.id}`,{
+        preserveState: true,
         onSuccess: () => {
-            selectedPost.value = {}; // Clear selected post after delete
+            selectedPost = {};
         }
     });
 }
-    const updateConfirmed = (post)=>{
-        post.user_id = selectedUser.value
-        router.put(`/post/${post.id}`,post,{
-        preserveScroll: true, // Prevents scrolling back to top
+    const updateConfirmed = ()=>{
+        router.put(`/post/${selectedPost.id}`,selectedPost,{
+        preserveState: true,
         onSuccess: () => {
-            selectedPost.value = {}; // Clear selected post after delete
+            selectedPost = {};
         }
     });
 }
@@ -66,6 +65,7 @@ const deleteConfirmed = (post)=>{
 
 
 const formatTime = (date) => {
+    if (!date) return 'N/A';
     return new Intl.DateTimeFormat("en-US", {
         hour: "2-digit",
         minute: "2-digit",
@@ -237,7 +237,8 @@ const formatTime = (date) => {
                         :key="index"
                         @click="fetchPage(link.url)"
                         v-html="link.label"
-                        :class="{'font-bold underline': link.active}"
+
+                        :class="{'font-bold bg-blue-600 text-white': link.active}"
                         class="px-3 py-1 border rounded">
                     </button>
             </div>
