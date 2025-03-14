@@ -1,6 +1,6 @@
 <?php
-
 use App\Http\Controllers\ProfileController;
+use App\Http\ControllersInertia\PostsController;
 use App\Http\Resources\PostResource;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -18,40 +18,15 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
-Route::get('/posts', function () {
-    //dd(new PostResource(Post::all()));
-return Inertia::render('Index/postindex',[
-    "posts" => Post::with('user:id,name')->paginate(15),
-    'users' => User::all(),
-    ] );
-});
-Route::delete("/post/{id}",function($id){
-    $post = Post::find($id);
-    $post->delete();
-    return back()->with("success","");
-});
 
-Route::put("/post/{id}",function($id,Request $request){
-    $post = Post::find($id);
-    //dd($request, $post);
-    $post->title=$request["title"];
-    $post->description=$request["description"];
-    $post->user_id=$request["user_id"];
-    $post->save();
-    return back()->with("success","");
-});
+Route::get('/posts', [PostsController::class,'index'])->name('posts.index');
+Route::delete("/post/{id}",[PostsController::class,"delete"])->name("posts.destroy");
+
+Route::put("/post/{id}",[PostsController::class,"update"])->name("posts.update");
 
 
 
-Route::post("/posts",function(Request $request){
-    $post = new Post([
-        "title"=> $request["title"],
-        "description"=> $request["description"],
-        "user_id"=> $request["user_id"],
-    ]);
-    $post->save();
-    return back()->with("success","");
-});
+Route::post("/posts", [PostsController::class,"create"])->name("posts.create");
 
 
 

@@ -1,7 +1,6 @@
 <script setup >
 import { defineProps, ref, reactive, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
-import { usePoll } from '@inertiajs/vue3'
+import { router, usePoll } from '@inertiajs/vue3';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -12,15 +11,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/Components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-
+import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert'
+import { AlertCircle } from 'lucide-vue-next'
 let selectedPost = reactive({});
-let selectedUser = computed({
-    get: () => selectedPost.user_id,
-    set: (value) => selectedPost.user_id = value,
-});
-
+let errors = ref(null);
+let selectedUser = ref(null)
+let createDialogOpen=ref(false);
 
 const props = defineProps(["posts","users"]);
 //console.log(props)
@@ -33,16 +31,32 @@ const createclicked = ()=>{
     selectedPost= {};
 }
 const createConfirmed = ()=>{
+        selectedPost.user_id = selectedUser.value;
         router.post(`/posts`,selectedPost,{
         preserveState: true,
         onSuccess: () => {
             selectedPost= {};
+            clearError();
+        },
+        onError:(errorMessagess)=>{
+            console.log(errorMessagess);
+            errors.value = errorMessagess;
+            createDialogOpen.value = true;
         }
     });
 }
+
+const clearError = (index)=>{
+    console.log(index);
+    if(!index){
+
+        errors.value={};
+    }
+    delete errors.value[index];
+}
 const viewClicked = (post)=>{
     Object.assign(selectedPost, post);
-    selectedUser = post.user_id
+    selectedUser.value = post.user_id
 }
 
 const deleteConfirmed = ()=>{
@@ -54,14 +68,20 @@ const deleteConfirmed = ()=>{
     });
 }
     const updateConfirmed = ()=>{
+        selectedPost.user_id = selectedUser.value;
         router.put(`/post/${selectedPost.id}`,selectedPost,{
         preserveState: true,
         onSuccess: () => {
             selectedPost = {};
+            clearError();
+        },
+        onError(errorMessagess){
+            console.log(errorMessagess);
+            errors.value = errorMessagess;
+            createDialogOpen.value = true;
         }
     });
 }
-
 
 
 const formatTime = (date) => {
@@ -76,11 +96,24 @@ const formatTime = (date) => {
 </script>
 <template lang="">
     <div class = "w-10/12 px-4 h-11/12">
+        <!-- <div v-if="errors"> -->
+            <div v-for="(error, index) in errors" :key="index" class="mb-2 overflow-hidden text-white bg-red-400 rounded-xl">
+                <Alert variant="destructive">
+                    <AlertTitle>{{index}}</AlertTitle>
+                    <div class="flex justify-between">
+                    <AlertDescription>{{ error }}</AlertDescription>
+                    <Button variant="outline" class="justify-end text-black" @click="clearError(index)">
+                    Dismiss
+                    </Button>
+                </div>
+                </Alert>
+            </div>
+        <!-- </div> -->
 
         <div class="flex flex-col gap-3 py-4">
             <div class="flex justify-center items-ceneter">
-                <AlertDialog>
-                    <AlertDialogTrigger @click="createclicked" class="px-4 py-3 bg-green-500 rounded-md hover:bg-green-700"> Create Post</AlertDialogTrigger>
+                <AlertDialog v-model:open="createDialogOpen">
+                    <AlertDialogTrigger @click="createclicked" class="px-4 py-3 font-bold text-white bg-green-500 rounded-md hover:bg-green-700"> Create Post</AlertDialogTrigger>
                     <!-- <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-700"> update</AlertDialogTrigger> -->
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -117,7 +150,7 @@ const formatTime = (date) => {
                             </AlertDialogTitle>
                         </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel @click="clearError()">Cancel</AlertDialogCancel>
                         <AlertDialogAction @click="createConfirmed">Create</AlertDialogAction>
                     </AlertDialogFooter>
                     </AlertDialogContent>
@@ -208,7 +241,7 @@ const formatTime = (date) => {
                                 </AlertDialogContent>
                             </AlertDialog>
                             <AlertDialog>
-                                <AlertDialogTrigger @click="viewClicked(selectedPost)" class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800"> remove</AlertDialogTrigger>
+                                <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800"> remove</AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>
@@ -243,6 +276,8 @@ const formatTime = (date) => {
                     </button>
             </div>
         </div>
+
+
 
     </div>
 </template>
