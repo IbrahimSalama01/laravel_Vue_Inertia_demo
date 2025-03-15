@@ -1,11 +1,11 @@
 <x-template :title="'Post ' . $post['id']">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+    <div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+
         <div class="max-w-3xl mx-auto space-y-6">
             <!-- Post Info Card -->
-            <div class="bg-white rounded border border-gray-200">
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div class="bg-white border border-gray-200 rounded">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                     <h2 class="text-base font-medium text-gray-700">Post Info</h2>
                 </div>
                 <div class="px-4 py-4">
@@ -22,8 +22,8 @@
 
 
             <!-- Post Creator Info Card -->
-            <div class="bg-white rounded border border-gray-200">
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div class="bg-white border border-gray-200 rounded">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                     <h2 class="text-base font-medium text-gray-700">Post Creator Info</h2>
                 </div>
                 <div class="px-4 py-4">
@@ -46,11 +46,11 @@
             <!-- Back Button -->
             <div class="flex justify-end">
                 <a href="{{ route('posts.index') }}"
-                    class="px-4 py-2 bg-gray-600 text-white font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    class="px-4 py-2 font-medium text-white bg-gray-600 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                     Back to All Posts
                 </a>
             </div>
         </div>
     </div>
-    <x-comment-section :comments="$comments" :users="$users" :postId="$post->id" />
+    <x-comment-section :comments="$comments" :users="$users" :postId="$post->id" :slug="$post->slug" />
 </x-template>

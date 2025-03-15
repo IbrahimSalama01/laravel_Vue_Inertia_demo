@@ -15,7 +15,7 @@ class PostResource extends JsonResource
     public function toArray(Request $request): array
     {
         $res = parent::toArray($request);
-        $res["user_name"] =$this->user->name;
+        $res["user_name"] =$this->user? $this->name:"Unkown user";
         return $res ;
     }
 }

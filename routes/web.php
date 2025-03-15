@@ -1,6 +1,9 @@
 <?php
-use App\Http\Controllers\ProfileController;
 use App\Http\ControllersInertia\PostsController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\PostsControllerPHP;
 use App\Http\Resources\PostResource;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -19,17 +22,12 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/posts', [PostsController::class,'index'])->name('posts.index');
-Route::delete("/post/{id}",[PostsController::class,"delete"])->name("posts.destroy");
+Route::middleware("auth")->get('/posts', [PostsController::class,'index'])->name('posts.index');
+Route::middleware("auth")->delete("/post/{id}",[PostsController::class,"delete"])->name("posts.destroy");
+Route::middleware("auth")->put("/post/{id}",[PostsController::class,"update"])->name("posts.update");
+Route::middleware("auth")->post ("/post/{id}",[PostsController::class,"update"])->name("posts.update");
 
-Route::put("/post/{id}",[PostsController::class,"update"])->name("posts.update");
-
-
-
-Route::post("/posts", [PostsController::class,"create"])->name("posts.create");
-
-
-
+Route::middleware("auth")->post("/posts", [PostsController::class,"create"])->name("posts.create");
 
 
 
@@ -44,3 +42,17 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+// Route::get('/post/{id}', [PostsControllerPHP::class,'show'])->name('posts.show');
+Route::post("/comments", [CommentController::class, "store"])->name("comments.store");
+Route::get('/post/{slug}', [PostsControllerPHP::class,'showslug'])->name('posts.show');
+Route::get('/photos/{filename}', [PhotoController::class, 'show']);
+
+// Route::get('/posts', [PostsController::class, 'index'])->name("posts.index");
+// Route::get('/posts/create', [PostsController::class, 'create'])->name("posts.create");
+// Route::get('/posts/{id}/edit/', [PostsController::class, 'edit'])->name("posts.edit");
+// Route::put("/posts", [PostsController::class, "update"])->name("posts.update");
+// Route::get('/posts/{id}', [PostsController::class, 'show'])->name("posts.show");
+// Route::post("/posts", [PostsController::class, "store"])->name("posts.store");
+// Route::delete("/posts/{id}", [PostsController::class, "destroy"])->name("posts.destroy");
+// Route::get('/posts/{id}/restore/', [PostsController::class, 'restore'])->name("posts.restore");
+

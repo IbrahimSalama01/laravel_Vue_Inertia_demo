@@ -15,11 +15,17 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert'
 import { AlertCircle } from 'lucide-vue-next'
+import { usePage } from "@inertiajs/vue3";
+
+
 let selectedPost = reactive({});
 let errors = ref(null);
 let selectedUser = ref(null)
 let createDialogOpen=ref(false);
-
+let updateDialogOpen=ref(false);
+let file = null;
+const page = usePage();
+const regUser = computed(() => page.props.auth.user);
 const props = defineProps(["posts","users"]);
 //console.log(props)
 const fetchPage = (url) =>{
@@ -30,12 +36,28 @@ const fetchPage = (url) =>{
 const createclicked = ()=>{
     selectedPost= {};
 }
+
+const changeImage = (event)=>{
+    file = event.target.files[0];
+}
 const createConfirmed = ()=>{
         selectedPost.user_id = selectedUser.value;
-        router.post(`/posts`,selectedPost,{
+        if(!file){
+            console.log("add photo");
+            createDialogOpen.value = true;
+        }
+        let formData = new FormData();
+        formData.append("photo", file);
+        formData.append("user_id", page.props.auth.user.id);
+        formData.append("title",selectedPost.title);
+        formData.append("description",selectedPost.description);
+
+        router.post(`/posts`,formData,{
+        forceFormData: true,
         preserveState: true,
         onSuccess: () => {
             selectedPost= {};
+            file = null;
             clearError();
         },
         onError:(errorMessagess)=>{
@@ -47,15 +69,23 @@ const createConfirmed = ()=>{
 }
 
 const clearError = (index)=>{
-    console.log(index);
+    //console.log(index);
     if(!index){
-
         errors.value={};
     }
     delete errors.value[index];
 }
 const viewClicked = (post)=>{
     Object.assign(selectedPost, post);
+    selectedUser.value = post.user_id
+}
+const deleteClicked = (post)=>{
+    Object.assign(selectedPost, post);
+    selectedUser.value = post.user_id
+}
+const updateClicked = (post)=>{
+    Object.assign(selectedPost, post);
+
     selectedUser.value = post.user_id
 }
 
@@ -69,16 +99,26 @@ const deleteConfirmed = ()=>{
 }
     const updateConfirmed = ()=>{
         selectedPost.user_id = selectedUser.value;
-        router.put(`/post/${selectedPost.id}`,selectedPost,{
-        preserveState: true,
+        let formData = new FormData();
+        //formData.append("photo", file);
+        formData.append("user_id", page.props.auth.user.id);
+        formData.append("title",selectedPost.title);
+        formData.append("description",selectedPost.description);
+        if (file) {
+            formData.append("photo", file);
+        }
+        router.post(`/post/${selectedPost.id}`,formData,{
+            forceFormData: true,
+            preserveState: true,
         onSuccess: () => {
             selectedPost = {};
+            file = null;
             clearError();
         },
         onError(errorMessagess){
             console.log(errorMessagess);
             errors.value = errorMessagess;
-            createDialogOpen.value = true;
+            updateDialogOpen.value = true;
         }
     });
 }
@@ -95,7 +135,7 @@ const formatTime = (date) => {
 };
 </script>
 <template lang="">
-    <div class = "w-10/12 px-4 h-11/12">
+    <div class = "w-full px-4 h-11/12">
         <!-- <div v-if="errors"> -->
             <div v-for="(error, index) in errors" :key="index" class="mb-2 overflow-hidden text-white bg-red-400 rounded-xl">
                 <Alert variant="destructive">
@@ -126,7 +166,6 @@ const formatTime = (date) => {
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                             v-model="selectedPost.title">
                                     </div>
-
                                     <!-- Description Textarea -->
                                     <div class="mb-4">
                                         <label for="description"
@@ -138,13 +177,20 @@ const formatTime = (date) => {
                                     <!-- Post Creator Select -->
                                     <div class="mb-6">
                                         <label for="creator" class="block mb-1 text-sm font-medium text-gray-700">Post Creator</label>
-                                        <select name="post_creator" id="creator" v-model="selectedUser"
+                                        <select name="post_creator" id="creator" v-model="regUser.id"  disabled
                                             class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                             <option  v-for="user in props.users" :key="user.id" :value="user.id"  >
 
                                                 {{user.name}}
                                             </option>
                                         </select>
+                                    </div>
+                                    <div class="mb-6 ">
+                                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label>
+                                        <input class="block w-full h-12 py-3 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                                id="file_input" name="image" type="file"
+                                                @change="changeImage">
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-300" id="file_input_help">PNG or JPG (MAX. 800x400px).</p>
                                     </div>
                                 </div>
                             </AlertDialogTitle>
@@ -156,24 +202,27 @@ const formatTime = (date) => {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-            <div class="flex flex-grow">
+            <div class="flex flex-grow w-full">
                 <table class="min-w-full text-center divide-gray-700 ">
                     <thead class="font-bold bg-gray-100">
                         <tr>
-                            <th class="px-4 py-2 text-gray-900 whitespace-nowrap">#</th>
-                            <th class="px-4 py-2 text-gray-900 whitespace-nowrap">Title</th>
-                            <th class="px-4 py-2 text-gray-900 whitespace-nowrap">Posted By</th>
-                            <th class="px-4 py-2 text-gray-900 whitespace-nowrap">Created At</th>
+                            <th class="px-4 py-2 text-gray-900 whitespace">#</th>
+                            <th class="px-4 py-2 text-gray-900 whitespace">Title</th>
+                            <th class="px-4 py-2 text-gray-900 whitespace">Slug</th>
+                            <th class="px-4 py-2 text-gray-900 whitespace">Posted By</th>
+                            <th class="px-4 py-2 text-gray-900 whitespace">Created At</th>
                             <th class="px-4 py-2 text-gray-900 whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="post in props.posts.data" :key="post.id">
-                            <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{post.id}}</td>
-                            <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{post.title}}</td>
-                            <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{post.user.name}}</td>
-                            <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >{{formatTime(post.created_at)}}</td>
+                            <td class="px-4 py-2 text-gray-700 whitespace" >{{post.id}}</td>
+                            <td class="px-4 py-2 text-gray-700 whitespace" >{{post.title}}</td>
+                            <td class="px-4 py-2 text-gray-700 whitespace" >{{post.slug}}</td>
+                            <td class="px-4 py-2 text-gray-700 whitespace" >{{post.user.name}}</td>
+                            <td class="px-4 py-2 text-gray-700 whitespace" >{{formatTime(post.created_at)}}</td>
                             <td class="px-4 py-2 text-gray-700 whitespace-nowrap" >
+                                <!-- view -->
                                 <AlertDialog>
                                     <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-400 rounded-md hover:bg-blue-500"> view</AlertDialogTrigger>
                                     <AlertDialogContent>
@@ -184,6 +233,7 @@ const formatTime = (date) => {
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
                                             <div>
+                                                <img :src="'photos/'+selectedPost.id" alt="" class="w-full mb-8">
                                                 <p>{{selectedPost.description}}</p>
                                                 <div class="py-4 mt-4 border-t-2 border-gray-400">
                                                 <p class="text-lg font-bold " >Posted by: {{selectedPost.user.name}}</p>
@@ -198,8 +248,10 @@ const formatTime = (date) => {
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <AlertDialog>
-                                <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-700"> update</AlertDialogTrigger>
+                            <!-- Edit -->
+                            <AlertDialog v-model:open="updateDialogOpen" >
+                                <AlertDialogTrigger @click="viewClicked(post)" :disabled="post.user.id != regUser.id"
+                                class="px-3 py-1 mx-2 text-sm text-white bg-blue-700 rounded-md hover:bg-blue-900 disabled:bg-gray-500"> update</AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>
@@ -223,13 +275,19 @@ const formatTime = (date) => {
                                                 <!-- Post Creator Select -->
                                                 <div class="mb-6">
                                                     <label for="creator" class="block mb-1 text-sm font-medium text-gray-700">Post Creator</label>
-                                                    <select name="post_creator" id="creator" v-model="selectedUser"
+                                                    <select name="post_creator" id="creator" v-model="regUser.id"  disabled
                                                         class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                                         <option  v-for="user in props.users" :key="user.id" :value="user.id"  >
-
                                                             {{user.name}}
                                                         </option>
                                                     </select>
+                                                </div>
+                                                <div class="mb-6 ">
+                                                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload new photo</label>
+                                                    <input class="block w-full h-12 py-3 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                                            id="file_input" name="image" type="file"
+                                                            @change="changeImage">
+                                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-300" id="file_input_help">PNG or JPG (MAX. 800x400px).</p>
                                                 </div>
                                             </div>
                                         </AlertDialogTitle>
@@ -240,8 +298,11 @@ const formatTime = (date) => {
                                 </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
+
+                            <!-- delete -->
                             <AlertDialog>
-                                <AlertDialogTrigger @click="viewClicked(post)" class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800"> remove</AlertDialogTrigger>
+                                <AlertDialogTrigger @click="viewClicked(post)" :disabled="post.user.id != regUser.id"
+                                class="px-3 py-1 mx-2 text-sm text-white bg-red-500 rounded-md hover:bg-red-800 disabled:bg-gray-500"> remove</AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>

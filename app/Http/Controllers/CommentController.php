@@ -14,6 +14,6 @@ class CommentController extends Controller
             "post_id"=> $request->post_id,
             "user_id"=>$request->comment_creator,
         ]);
-        return redirect()->route("posts.show",$request->post_id);
+        return redirect()->route("posts.show",$request->slug);
     }
 }

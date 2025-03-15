@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Post;
-class PostsController extends Controller
+class PostsControllerPHP extends Controller
 {
     function index(Request $request)
     {
@@ -37,6 +37,18 @@ class PostsController extends Controller
         $users = User::all();
         return view("posts.show", ["id" => $id, "post" => $post,"comments"=>$comments,"users"=> $users]);
     }
+
+    function showslug($slug)
+    {
+        $post = Post::findBySlugOrFail($slug);
+        if($post == null) {
+            return response(redirect(url('/')), 404);
+        }
+        $comments = $post->comments;
+        $users = User::all();
+        return view("posts.show", ["id" => $post["id"], "post" => $post,"comments"=>$comments,"users"=> $users]);
+    }
+
 
     function edit($id)
     {
