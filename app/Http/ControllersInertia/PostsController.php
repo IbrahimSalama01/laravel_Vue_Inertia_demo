@@ -57,7 +57,7 @@ class PostsController extends Controller{
         return back()->with("success","");
     }
 
-    function create(Request $request){
+    function store(Request $request){
         //dd($request);
         $validated = $request->validate([
             "title"=> ["required","min:3","unique:App\Models\Post,title"],

@@ -86,5 +86,6 @@ class PostsControllerPHP extends Controller
         $post->restore();
         return to_route("posts.index");
     }
+    
 }
 

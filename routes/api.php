@@ -1,26 +1,17 @@
 <?php
 
-use App\Http\Resources\PostResource;
-use App\Http\Resources\UserResource;
-use App\Models\Post;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/users', function (Request $request) {
+Route::middleware("auth:sanctum")->get('/users', [UserController::class,"index"]);
 
-    return UserResource::collection(User::all());
-});
+Route::middleware("auth:sanctum")->get('/users/{id}', [UserController::class,"show"]);
 
-Route::get('/user/{id}', function (string $id) {
-    return new UserResource(User::findOrFail($id));
-});
+Route::middleware("auth:sanctum")->get('/posts', [PostController::class,"index"]);
 
-Route::get('/posts', function (Request $request) {
+Route::middleware("auth:sanctum")->get('/posts/{id}', [PostController::class,"show"]);
 
-    return PostResource::collection(Post::all());
-});
+Route::middleware("auth:sanctum")->post('/posts', [PostController::class,"store"]);
 
-Route::get('/post/{id}', function (string $id) {
-    return new PostResource(Post::findOrFail($id));
-});
+Route::post('/sanctum/token',[UserController::class,"createToken"] );

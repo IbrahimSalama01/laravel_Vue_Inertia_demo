@@ -23,11 +23,11 @@ Route::get('/', function () {
 });
 
 Route::middleware("auth")->get('/posts', [PostsController::class,'index'])->name('posts.index');
-Route::middleware("auth")->delete("/post/{id}",[PostsController::class,"delete"])->name("posts.destroy");
-Route::middleware("auth")->put("/post/{id}",[PostsController::class,"update"])->name("posts.update");
-Route::middleware("auth")->post ("/post/{id}",[PostsController::class,"update"])->name("posts.update");
+Route::middleware("auth")->delete("/posts/{id}",[PostsController::class,"delete"])->name("posts.destroy");
+Route::middleware("auth")->put("/posts/{id}",[PostsController::class,"update"])->name("posts.update");
+Route::middleware("auth")->post ("/posts/{id}",[PostsController::class,"update"])->name("posts.update");
 
-Route::middleware("auth")->post("/posts", [PostsController::class,"create"])->name("posts.create");
+Route::middleware("auth")->post("/posts", [PostsController::class,"store"])->name("posts.create");
 
 
 
@@ -44,9 +44,13 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 // Route::get('/post/{id}', [PostsControllerPHP::class,'show'])->name('posts.show');
 Route::post("/comments", [CommentController::class, "store"])->name("comments.store");
-Route::get('/post/{slug}', [PostsControllerPHP::class,'showslug'])->name('posts.show');
+Route::get('/posts/{slug}', [PostsControllerPHP::class,'showslug'])->name('posts.show');
 Route::get('/photos/{filename}', [PhotoController::class, 'show']);
+Route::post('/tokens/create', function (Request $request) {
+    $token = $request->user()->createToken($request->token_name);
 
+    return ['token' => $token->plainTextToken];
+});
 // Route::get('/posts', [PostsController::class, 'index'])->name("posts.index");
 // Route::get('/posts/create', [PostsController::class, 'create'])->name("posts.create");
 // Route::get('/posts/{id}/edit/', [PostsController::class, 'edit'])->name("posts.edit");
